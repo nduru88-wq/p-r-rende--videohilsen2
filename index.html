@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Min familie">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0b1220">
+
+  <title>Min familie</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="app">
+  <header>
+    <div class="titleLine">
+      <div class="titleLogo" id="hiddenAdminLogo">👨‍👩‍👧‍👦</div>
+      <h1>Min familie</h1>
+      <div class="titleLogo">▶</div>
+    </div>
+    <p class="hint">Tryk på billedet for at se video</p>
+  </header>
+
+  <main class="grid" id="familyGrid"></main>
+</div>
+
+<div class="modalBackdrop" id="adminModal">
+  <div class="modal">
+    <h2>Administrer familie</h2>
+
+    <button class="mainBtn" id="newPersonBtn">+ Opret familiemedlem</button>
+
+    <p class="note">
+      Brug ⬆️ og ⬇️ for at ændre rækkefølgen.
+      Tryk på ⭐ for at gøre en person til favorit.
+    </p>
+
+    <div id="adminList"></div>
+
+    <button class="lightBtn fullWidth mt14" id="closeAdminBtn">Luk</button>
+  </div>
+</div>
+
+<div class="modalBackdrop" id="formModal">
+  <div class="modal">
+    <h2 id="formTitle">Opret familiemedlem</h2>
+
+    <input type="hidden" id="editId">
+
+    <label>Navn</label>
+    <input id="nameInput" type="text" placeholder="Fx Niels">
+
+    <label>Titel / relation</label>
+    <input id="relationInput" type="text" placeholder="Fx Søn">
+
+    <label>Video fra filmrullen</label>
+    <input id="videoInput" type="file" accept="video/*">
+
+    <p class="note">
+      Appen laver selv et billede/thumbnail fra videoen. Brug helst korte videoer, fx 5-20 sekunder.
+    </p>
+
+    <div class="checkboxLine">
+      <input id="favoriteInput" type="checkbox">
+      <span>Vis som favorit</span>
+    </div>
+
+    <div class="btnRow">
+      <button class="mainBtn" id="saveBtn">Gem</button>
+      <button class="lightBtn" id="cancelFormBtn">Annuller</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
