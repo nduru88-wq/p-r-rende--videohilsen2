@@ -107,17 +107,15 @@
     .card{
       position:relative;
       aspect-ratio:1 / 1;
-      background:linear-gradient(180deg,var(--card2),var(--card));
+      background:rgba(255,255,255,.08);
       border:1px solid var(--stroke);
       border-radius:22px;
       box-shadow:var(--shadow);
       padding:0;
       min-height:0;
       overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      align-items:stretch;
-      justify-content:stretch;
+      display:block;
+      cursor:pointer;
       -webkit-tap-highlight-color:transparent;
     }
 
@@ -127,22 +125,28 @@
       position:absolute;
       top:9px;
       right:10px;
-      z-index:2;
+      z-index:5;
       font-size:22px;
-      filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,.55));
+      pointer-events:none;
+    }
+
+    .mediaSlot,
+    .avatar,
+    .tileVideo{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
     }
 
     .avatar{
-      width:100%;
-      height:72%;
       border-radius:0;
       background:rgba(255,255,255,.10);
-      border:0;
-      border-bottom:1px solid var(--stroke);
       overflow:hidden;
       display:grid;
       place-items:center;
-      font-size:clamp(42px,13vw,74px);
+      font-size:clamp(48px,15vw,86px);
       font-weight:900;
     }
 
@@ -153,24 +157,31 @@
       display:block;
     }
 
-    .tileInfo{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      padding:8px 7px 9px;
-      text-align:center;
-      background:rgba(0,0,0,.10);
+    .tileVideo{
+      object-fit:cover;
+      background:#000;
+      z-index:2;
+    }
+
+    .tileOverlay{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:4;
+      padding:42px 11px 11px;
+      background:linear-gradient(0deg, rgba(0,0,0,.78), rgba(0,0,0,.36) 58%, transparent);
+      pointer-events:none;
     }
 
     .name{
       margin:0 0 3px;
-      text-align:center;
-      font-size:clamp(16px,4.4vw,22px);
-      font-weight:900;
-      line-height:1.05;
+      color:white;
+      text-align:left;
+      font-size:clamp(18px,5.4vw,25px);
+      font-weight:950;
+      line-height:1.02;
+      text-shadow:0 2px 8px rgba(0,0,0,.7);
       max-width:100%;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -181,10 +192,11 @@
 
     .relation{
       margin:0;
-      color:var(--muted);
-      font-size:clamp(13px,3.4vw,15px);
+      color:rgba(255,255,255,.86);
+      font-size:clamp(13px,3.6vw,16px);
       line-height:1.1;
-      text-align:center;
+      text-align:left;
+      text-shadow:0 2px 7px rgba(0,0,0,.65);
       max-width:100%;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -195,15 +207,22 @@
       position:absolute;
       left:10px;
       top:10px;
+      z-index:5;
       width:38px;
       height:38px;
       border-radius:999px;
       display:grid;
       place-items:center;
       background:rgba(0,0,0,.42);
-      border:1px solid rgba(255,255,255,.24);
+      border:1px solid rgba(255,255,255,.28);
+      color:white;
       font-size:18px;
       box-shadow:0 4px 14px rgba(0,0,0,.35);
+      pointer-events:none;
+    }
+
+    .card.playing .playBadge{
+      display:none;
     }
 
     .empty{
@@ -487,6 +506,9 @@ let tapCount = 0;
 let tapTimer = null;
 let selectedVideoFile = null;
 let selectedThumbnail = null;
+let activeInlineVideo = null;
+let activeInlineVideoUrl = null;
+let activeInlineCard = null;
 
 function loadPeople(){
   try{
@@ -634,6 +656,7 @@ function sortedPeople(){
 }
 
 function renderPeople(){
+  stopInlineVideo(false);
   familyGrid.innerHTML = "";
 
   const shown = sortedPeople();
@@ -642,7 +665,7 @@ function renderPeople(){
     familyGrid.innerHTML = `
       <div class="empty">
         <h2>Ingen personer endnu</h2>
-        <p>Tryk 3 gange på familie-ikonet øverst til venstre for at oprette personer.</p>
+        <p>Tryk 5 gange på familie-ikonet øverst til venstre for at oprette personer.</p>
       </div>
     `;
     return;
@@ -651,22 +674,23 @@ function renderPeople(){
   shown.forEach(person => {
     const card = document.createElement("div");
     card.className = "card";
+    card.dataset.id = person.id;
 
     const avatar = person.thumbnail
       ? `<div class="avatar"><img src="${person.thumbnail}" alt="${escapeHtml(person.name)}"></div>`
       : `<div class="avatar">${escapeHtml(person.name.charAt(0).toUpperCase())}</div>`;
 
     card.innerHTML = `
+      <div class="mediaSlot">${avatar}</div>
       ${person.favorite ? `<div class="favoriteBadge">⭐</div>` : ""}
       <div class="playBadge">▶</div>
-      ${avatar}
-      <div class="tileInfo">
+      <div class="tileOverlay">
         <p class="name">${escapeHtml(person.name)}</p>
         <p class="relation">${escapeHtml(person.relation)}</p>
       </div>
     `;
 
-    card.addEventListener("click", () => openPersonVideo(person.id));
+    card.addEventListener("click", () => openPersonVideo(person.id, card));
 
     familyGrid.appendChild(card);
   });
@@ -853,9 +877,46 @@ async function saveForm(){
   formModal.classList.remove("show");
 }
 
-async function openPersonVideo(id){
+function stopInlineVideo(restoreThumbnail = true){
+  if(activeInlineVideo){
+    try{
+      activeInlineVideo.pause();
+      activeInlineVideo.removeAttribute("src");
+      activeInlineVideo.load();
+    }catch(e){}
+  }
+
+  if(activeInlineVideoUrl){
+    URL.revokeObjectURL(activeInlineVideoUrl);
+  }
+
+  if(restoreThumbnail && activeInlineCard){
+    const id = activeInlineCard.dataset.id;
+    const person = people.find(p => p.id === id);
+    const mediaSlot = activeInlineCard.querySelector(".mediaSlot");
+
+    if(person && mediaSlot){
+      mediaSlot.innerHTML = person.thumbnail
+        ? `<div class="avatar"><img src="${person.thumbnail}" alt="${escapeHtml(person.name)}"></div>`
+        : `<div class="avatar">${escapeHtml(person.name.charAt(0).toUpperCase())}</div>`;
+    }
+
+    activeInlineCard.classList.remove("playing");
+  }
+
+  activeInlineVideo = null;
+  activeInlineVideoUrl = null;
+  activeInlineCard = null;
+}
+
+async function openPersonVideo(id, card){
   const person = people.find(p => p.id === id);
   if(!person) return;
+
+  if(activeInlineCard && activeInlineCard.dataset.id === id){
+    stopInlineVideo(true);
+    return;
+  }
 
   const file = await getVideo(id);
 
@@ -864,16 +925,37 @@ async function openPersonVideo(id){
     return;
   }
 
-  if(personVideo.src){
-    URL.revokeObjectURL(personVideo.src);
-  }
+  stopInlineVideo(true);
 
-  personVideo.src = URL.createObjectURL(file);
-  videoFullscreen.classList.add("show");
+  const mediaSlot = card.querySelector(".mediaSlot");
+  if(!mediaSlot) return;
+
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.className = "tileVideo";
+  video.controls = true;
+  video.playsInline = true;
+  video.src = url;
+
+  video.addEventListener("click", e => {
+    e.stopPropagation();
+  });
+
+  video.addEventListener("ended", () => {
+    stopInlineVideo(true);
+  });
+
+  mediaSlot.innerHTML = "";
+  mediaSlot.appendChild(video);
+
+  activeInlineVideo = video;
+  activeInlineVideoUrl = url;
+  activeInlineCard = card;
+  card.classList.add("playing");
 
   try{
-    personVideo.currentTime = 0;
-    const playPromise = personVideo.play();
+    video.currentTime = 0;
+    const playPromise = video.play();
 
     if(playPromise && typeof playPromise.catch === "function"){
       playPromise.catch(() => {});
@@ -882,6 +964,8 @@ async function openPersonVideo(id){
 }
 
 function closeVideo(){
+  stopInlineVideo(true);
+
   try{
     personVideo.pause();
     personVideo.currentTime = 0;
