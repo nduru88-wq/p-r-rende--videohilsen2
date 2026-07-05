@@ -2,8 +2,7 @@
 <html lang="da">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Min familie">
   <meta name="mobile-web-app-capable" content="yes">
@@ -14,7 +13,381 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:rgba(255,255,255,.08);
+      --card2:rgba(255,255,255,.13);
+      --text:#fff;
+      --muted:rgba(255,255,255,.72);
+      --stroke:rgba(255,255,255,.14);
+      --green:#27d17c;
+      --yellow:#ffd86b;
+      --red:#ff5a5a;
+      --radius:24px;
+      --shadow:0 10px 28px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      height:100%;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:
+        radial-gradient(1100px 700px at 50% 0%, rgba(80,140,255,.25), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      overscroll-behavior:none;
+      touch-action:manipulation;
+    }
+
+    body{overflow:hidden}
+
+    .app{
+      height:100dvh;
+      max-width:900px;
+      margin:auto;
+      padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    header{text-align:center;padding-top:4px}
+
+    .titleLine{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+    }
+
+    .titleLogo{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--stroke);
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
+      user-select:none;
+      font-size:22px;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    .titleLogo:active{transform:scale(.96)}
+
+    h1{
+      margin:0;
+      font-size:clamp(24px,6vw,34px);
+      line-height:1.05;
+      white-space:nowrap;
+    }
+
+    .hint{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .grid{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      overflow:auto;
+      padding-bottom:8px;
+      align-content:start;
+    }
+
+    .card{
+      position:relative;
+      aspect-ratio:1 / 1;
+      background:linear-gradient(180deg,var(--card2),var(--card));
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:0;
+      min-height:0;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      justify-content:stretch;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    .card:active{transform:scale(.985)}
+
+    .favoriteBadge{
+      position:absolute;
+      top:9px;
+      right:10px;
+      z-index:2;
+      font-size:22px;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));
+    }
+
+    .avatar{
+      width:100%;
+      height:72%;
+      border-radius:0;
+      background:rgba(255,255,255,.10);
+      border:0;
+      border-bottom:1px solid var(--stroke);
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+      font-size:clamp(42px,13vw,74px);
+      font-weight:900;
+    }
+
+    .avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .tileInfo{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:8px 7px 9px;
+      text-align:center;
+      background:rgba(0,0,0,.10);
+    }
+
+    .name{
+      margin:0 0 3px;
+      text-align:center;
+      font-size:clamp(16px,4.4vw,22px);
+      font-weight:900;
+      line-height:1.05;
+      max-width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+    }
+
+    .relation{
+      margin:0;
+      color:var(--muted);
+      font-size:clamp(13px,3.4vw,15px);
+      line-height:1.1;
+      text-align:center;
+      max-width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .playBadge{
+      position:absolute;
+      left:10px;
+      top:10px;
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background:rgba(0,0,0,.42);
+      border:1px solid rgba(255,255,255,.24);
+      font-size:18px;
+      box-shadow:0 4px 14px rgba(0,0,0,.35);
+    }
+
+    .empty{
+      grid-column:1 / -1;
+      text-align:center;
+      color:var(--muted);
+      padding:40px 20px;
+      border:1px dashed var(--stroke);
+      border-radius:var(--radius);
+      align-self:start;
+      line-height:1.4;
+    }
+
+    .modalBackdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.72);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+
+    .modalBackdrop.show{display:flex}
+
+    .modal{
+      width:min(540px,94vw);
+      max-height:90dvh;
+      overflow:auto;
+      background:#0b1220;
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 18px 50px rgba(0,0,0,.55);
+    }
+
+    .modal h2{
+      margin:0 0 14px;
+      text-align:center;
+    }
+
+    label{
+      display:block;
+      margin:12px 0 6px;
+      font-weight:800;
+    }
+
+    input{
+      width:100%;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.10);
+      color:white;
+      padding:13px;
+      border-radius:14px;
+      font-size:17px;
+    }
+
+    .checkboxLine{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:14px;
+      font-weight:800;
+    }
+
+    .checkboxLine input{
+      width:22px;
+      height:22px;
+    }
+
+    button{
+      border:0;
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .mainBtn{
+      width:100%;
+      background:var(--green);
+      color:#062012;
+    }
+
+    .lightBtn{
+      background:rgba(255,255,255,.14);
+      color:white;
+      border:1px solid var(--stroke);
+    }
+
+    .dangerBtn{
+      background:rgba(255,90,90,.18);
+      color:#ffd0d0;
+      border:1px solid rgba(255,90,90,.35);
+    }
+
+    .btnRow{
+      display:flex;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .btnRow button{flex:1}
+
+    .listItem{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:10px;
+      padding:10px;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      margin-top:10px;
+      background:rgba(255,255,255,.06);
+    }
+
+    .smallActions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .smallActions button{
+      font-size:13px;
+      padding:9px 9px;
+    }
+
+    .videoFullscreen{
+      position:fixed;
+      inset:0;
+      background:#000;
+      display:none;
+      z-index:10000;
+    }
+
+    .videoFullscreen.show{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .videoFullscreen video{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      background:#000;
+    }
+
+    .closeVideoFloating{
+      position:fixed;
+      right:calc(14px + env(safe-area-inset-right));
+      top:calc(14px + env(safe-area-inset-top));
+      z-index:10001;
+      background:rgba(255,255,255,.18);
+      color:white;
+      border:1px solid rgba(255,255,255,.25);
+      border-radius:999px;
+      width:48px;
+      height:48px;
+      font-size:24px;
+      display:none;
+      place-items:center;
+    }
+
+    .videoFullscreen.show + .closeVideoFloating{
+      display:grid;
+    }
+
+    .note{
+      color:rgba(255,255,255,.72);
+      font-size:14px;
+      line-height:1.4;
+    }
+
+    @media(max-width:390px){
+      .titleLogo{width:38px;height:38px}
+      .titleLine{gap:8px}
+      .grid{gap:10px}
+      .app{padding-left:10px;padding-right:10px}
+    }
+  </style>
 </head>
 
 <body>
@@ -25,7 +398,7 @@
       <h1>Min familie</h1>
       <div class="titleLogo">▶</div>
     </div>
-    <p class="hint">Tryk på billedet for at se video</p>
+    <p class="hint">Tryk på en firkant for at se video</p>
   </header>
 
   <main class="grid" id="familyGrid"></main>
@@ -34,7 +407,6 @@
 <div class="modalBackdrop" id="adminModal">
   <div class="modal">
     <h2>Administrer familie</h2>
-
     <button class="mainBtn" id="newPersonBtn">+ Opret familiemedlem</button>
 
     <p class="note">
@@ -43,8 +415,7 @@
     </p>
 
     <div id="adminList"></div>
-
-    <button class="lightBtn fullWidth mt14" id="closeAdminBtn">Luk</button>
+    <button class="lightBtn" id="closeAdminBtn" style="width:100%;margin-top:14px;">Luk</button>
   </div>
 </div>
 
@@ -79,6 +450,502 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<div class="videoFullscreen" id="videoFullscreen">
+  <video id="personVideo" controls playsinline></video>
+</div>
+<button class="closeVideoFloating" id="closeVideoBtn">×</button>
+
+<script>
+const STORAGE_KEY = "familieVideoPersonerV3";
+const DB_NAME = "familieVideoDBV2";
+const DB_VERSION = 1;
+const STORE_NAME = "videos";
+
+const familyGrid = document.getElementById("familyGrid");
+const adminModal = document.getElementById("adminModal");
+const formModal = document.getElementById("formModal");
+const hiddenAdminLogo = document.getElementById("hiddenAdminLogo");
+const closeAdminBtn = document.getElementById("closeAdminBtn");
+const newPersonBtn = document.getElementById("newPersonBtn");
+const adminList = document.getElementById("adminList");
+
+const formTitle = document.getElementById("formTitle");
+const editId = document.getElementById("editId");
+const nameInput = document.getElementById("nameInput");
+const relationInput = document.getElementById("relationInput");
+const videoInput = document.getElementById("videoInput");
+const favoriteInput = document.getElementById("favoriteInput");
+const saveBtn = document.getElementById("saveBtn");
+const cancelFormBtn = document.getElementById("cancelFormBtn");
+
+const videoFullscreen = document.getElementById("videoFullscreen");
+const personVideo = document.getElementById("personVideo");
+const closeVideoBtn = document.getElementById("closeVideoBtn");
+
+let people = loadPeople();
+let tapCount = 0;
+let tapTimer = null;
+let selectedVideoFile = null;
+let selectedThumbnail = null;
+
+function loadPeople(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  }catch(e){
+    return [];
+  }
+}
+
+function savePeople(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(people));
+}
+
+function makeId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function escapeHtml(str){
+  return String(str || "").replace(/[&<>"']/g, function(m){
+    return ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    })[m];
+  });
+}
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if(!db.objectStoreNames.contains(STORE_NAME)){
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveVideo(id, file){
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).put(file, id);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getVideo(id){
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const request = tx.objectStore(STORE_NAME).get(id);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function deleteVideo(id){
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).delete(id);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function createThumbnailFromVideo(file){
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    const url = URL.createObjectURL(file);
+
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.src = url;
+
+    video.addEventListener("loadedmetadata", () => {
+      video.currentTime = Math.min(0.5, video.duration || 0);
+    });
+
+    video.addEventListener("seeked", () => {
+      try{
+        const size = 500;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+
+        const ctx = canvas.getContext("2d");
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const side = Math.min(vw, vh);
+        const sx = (vw - side) / 2;
+        const sy = (vh - side) / 2;
+
+        ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+        URL.revokeObjectURL(url);
+        resolve(dataUrl);
+      }catch(e){
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+    });
+
+    video.addEventListener("error", () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Kunne ikke læse videoen."));
+    });
+  });
+}
+
+videoInput.addEventListener("change", async () => {
+  selectedVideoFile = videoInput.files[0] || null;
+  selectedThumbnail = null;
+
+  if(selectedVideoFile){
+    try{
+      selectedThumbnail = await createThumbnailFromVideo(selectedVideoFile);
+    }catch(e){
+      alert("Kunne ikke lave thumbnail fra videoen. Prøv en anden video.");
+    }
+  }
+});
+
+function sortedPeople(){
+  return [...people].sort((a,b) => {
+    if(Boolean(a.favorite) !== Boolean(b.favorite)){
+      return a.favorite ? -1 : 1;
+    }
+    return (a.order || 0) - (b.order || 0);
+  });
+}
+
+function renderPeople(){
+  familyGrid.innerHTML = "";
+
+  const shown = sortedPeople();
+
+  if(shown.length === 0){
+    familyGrid.innerHTML = `
+      <div class="empty">
+        <h2>Ingen personer endnu</h2>
+        <p>Tryk 3 gange på familie-ikonet øverst til venstre for at oprette personer.</p>
+      </div>
+    `;
+    return;
+  }
+
+  shown.forEach(person => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const avatar = person.thumbnail
+      ? `<div class="avatar"><img src="${person.thumbnail}" alt="${escapeHtml(person.name)}"></div>`
+      : `<div class="avatar">${escapeHtml(person.name.charAt(0).toUpperCase())}</div>`;
+
+    card.innerHTML = `
+      ${person.favorite ? `<div class="favoriteBadge">⭐</div>` : ""}
+      <div class="playBadge">▶</div>
+      ${avatar}
+      <div class="tileInfo">
+        <p class="name">${escapeHtml(person.name)}</p>
+        <p class="relation">${escapeHtml(person.relation)}</p>
+      </div>
+    `;
+
+    card.addEventListener("click", () => openPersonVideo(person.id));
+
+    familyGrid.appendChild(card);
+  });
+}
+
+function renderAdminList(){
+  adminList.innerHTML = "";
+
+  const shown = sortedPeople();
+
+  if(shown.length === 0){
+    adminList.innerHTML = `
+      <p style="text-align:center;color:rgba(255,255,255,.72);">
+        Ingen personer oprettet endnu.
+      </p>
+    `;
+    return;
+  }
+
+  shown.forEach(person => {
+    const item = document.createElement("div");
+    item.className = "listItem";
+    item.dataset.id = person.id;
+
+    item.innerHTML = `
+      <div>
+        <strong>${person.favorite ? "⭐ " : ""}${escapeHtml(person.name)}</strong><br>
+        <span style="color:rgba(255,255,255,.7);font-size:14px;">
+          ${escapeHtml(person.relation)}
+        </span>
+      </div>
+      <div class="smallActions">
+        <button class="lightBtn upBtn">⬆️</button>
+        <button class="lightBtn downBtn">⬇️</button>
+        <button class="lightBtn favBtn">${person.favorite ? "Fjern ⭐" : "⭐"}</button>
+        <button class="lightBtn editBtn">Ret</button>
+        <button class="dangerBtn deleteBtn">Slet</button>
+      </div>
+    `;
+
+    item.querySelector(".upBtn").addEventListener("click", () => {
+      movePerson(person.id, -1);
+    });
+
+    item.querySelector(".downBtn").addEventListener("click", () => {
+      movePerson(person.id, 1);
+    });
+
+    item.querySelector(".favBtn").addEventListener("click", () => {
+      person.favorite = !person.favorite;
+      savePeople();
+      renderPeople();
+      renderAdminList();
+    });
+
+    item.querySelector(".editBtn").addEventListener("click", () => {
+      adminModal.classList.remove("show");
+      openEditForm(person.id);
+    });
+
+    item.querySelector(".deleteBtn").addEventListener("click", async () => {
+      if(confirm("Vil du slette " + person.name + "?")){
+        people = people.filter(p => p.id !== person.id);
+        savePeople();
+        await deleteVideo(person.id);
+        renderPeople();
+        renderAdminList();
+      }
+    });
+
+    adminList.appendChild(item);
+  });
+}
+
+function movePerson(id, direction){
+  const list = sortedPeople();
+  const index = list.findIndex(p => p.id === id);
+  if(index < 0) return;
+
+  const newIndex = index + direction;
+  if(newIndex < 0 || newIndex >= list.length) return;
+
+  const [moved] = list.splice(index, 1);
+  list.splice(newIndex, 0, moved);
+
+  list.forEach((p, i) => {
+    const original = people.find(x => x.id === p.id);
+    if(original) original.order = i;
+  });
+
+  savePeople();
+  renderPeople();
+  renderAdminList();
+}
+
+function openAdmin(){
+  renderAdminList();
+  adminModal.classList.add("show");
+}
+
+function openNewForm(){
+  formTitle.textContent = "Opret familiemedlem";
+  editId.value = "";
+  nameInput.value = "";
+  relationInput.value = "";
+  favoriteInput.checked = false;
+  videoInput.value = "";
+  selectedVideoFile = null;
+  selectedThumbnail = null;
+  formModal.classList.add("show");
+}
+
+function openEditForm(id){
+  const person = people.find(p => p.id === id);
+  if(!person) return;
+
+  formTitle.textContent = "Rediger familiemedlem";
+  editId.value = person.id;
+  nameInput.value = person.name;
+  relationInput.value = person.relation;
+  favoriteInput.checked = !!person.favorite;
+  videoInput.value = "";
+  selectedVideoFile = null;
+  selectedThumbnail = null;
+  formModal.classList.add("show");
+}
+
+async function saveForm(){
+  const name = nameInput.value.trim();
+  const relation = relationInput.value.trim();
+  const id = editId.value;
+
+  if(!name){
+    alert("Skriv et navn.");
+    return;
+  }
+
+  if(!relation){
+    alert("Skriv en titel/relation.");
+    return;
+  }
+
+  if(id){
+    const person = people.find(p => p.id === id);
+    if(!person) return;
+
+    person.name = name;
+    person.relation = relation;
+    person.favorite = favoriteInput.checked;
+
+    if(selectedVideoFile){
+      await saveVideo(id, selectedVideoFile);
+      person.hasVideo = true;
+
+      if(selectedThumbnail){
+        person.thumbnail = selectedThumbnail;
+      }
+    }
+  }else{
+    if(!selectedVideoFile){
+      alert("Vælg en video.");
+      return;
+    }
+
+    const newId = makeId();
+
+    const person = {
+      id: newId,
+      name,
+      relation,
+      favorite: favoriteInput.checked,
+      thumbnail: selectedThumbnail,
+      hasVideo: true,
+      order: people.length
+    };
+
+    people.push(person);
+    await saveVideo(newId, selectedVideoFile);
+  }
+
+  savePeople();
+  renderPeople();
+  renderAdminList();
+  formModal.classList.remove("show");
+}
+
+async function openPersonVideo(id){
+  const person = people.find(p => p.id === id);
+  if(!person) return;
+
+  const file = await getVideo(id);
+
+  if(!file){
+    alert("Der er ikke valgt en video til " + person.name + ".");
+    return;
+  }
+
+  if(personVideo.src){
+    URL.revokeObjectURL(personVideo.src);
+  }
+
+  personVideo.src = URL.createObjectURL(file);
+  videoFullscreen.classList.add("show");
+
+  try{
+    personVideo.currentTime = 0;
+    const playPromise = personVideo.play();
+
+    if(playPromise && typeof playPromise.catch === "function"){
+      playPromise.catch(() => {});
+    }
+  }catch(e){}
+}
+
+function closeVideo(){
+  try{
+    personVideo.pause();
+    personVideo.currentTime = 0;
+  }catch(e){}
+
+  if(personVideo.src){
+    URL.revokeObjectURL(personVideo.src);
+    personVideo.removeAttribute("src");
+    personVideo.load();
+  }
+
+  videoFullscreen.classList.remove("show");
+}
+
+hiddenAdminLogo.addEventListener("click", () => {
+  tapCount++;
+
+  if(tapTimer){
+    clearTimeout(tapTimer);
+  }
+
+  tapTimer = setTimeout(() => {
+    tapCount = 0;
+  }, 1200);
+
+  if(tapCount >= 5){
+    tapCount = 0;
+    clearTimeout(tapTimer);
+    openAdmin();
+  }
+});
+
+closeAdminBtn.addEventListener("click", () => {
+  adminModal.classList.remove("show");
+});
+
+newPersonBtn.addEventListener("click", () => {
+  adminModal.classList.remove("show");
+  openNewForm();
+});
+
+saveBtn.addEventListener("click", saveForm);
+
+cancelFormBtn.addEventListener("click", () => {
+  formModal.classList.remove("show");
+});
+
+closeVideoBtn.addEventListener("click", closeVideo);
+
+personVideo.addEventListener("ended", closeVideo);
+
+videoFullscreen.addEventListener("click", e => {
+  if(e.target === videoFullscreen){
+    closeVideo();
+  }
+});
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+renderPeople();
+</script>
 </body>
 </html>
