@@ -356,7 +356,8 @@
     .videoFullscreen{
       position:fixed;
       inset:0;
-      background:#000;
+      padding:24px;
+      background:rgba(0,0,0,.68);
       display:none;
       z-index:10000;
     }
@@ -368,16 +369,21 @@
     }
 
     .videoFullscreen video{
-      width:100%;
-      height:100%;
+      display:block;
+      width:min(850px,100%);
+      height:auto;
+      max-height:78dvh;
+      aspect-ratio:16 / 9;
       object-fit:contain;
       background:#000;
+      border-radius:18px;
+      box-shadow:0 20px 65px rgba(0,0,0,.7);
     }
 
     .closeVideoFloating{
       position:fixed;
-      right:calc(14px + env(safe-area-inset-right));
-      top:calc(14px + env(safe-area-inset-top));
+      right:calc(16px + env(safe-area-inset-right));
+      top:calc(16px + env(safe-area-inset-top));
       z-index:10001;
       background:rgba(255,255,255,.18);
       color:white;
@@ -909,74 +915,51 @@ function stopInlineVideo(restoreThumbnail = true){
   activeInlineCard = null;
 }
 
+let videoOpenRequest = 0;
+let currentPopupUrl = null;
+
 async function openPersonVideo(id, card){
   const person = people.find(p => p.id === id);
   if(!person) return;
 
-  if(activeInlineCard && activeInlineCard.dataset.id === id){
-    stopInlineVideo(true);
+  const request = ++videoOpenRequest;
+  closeVideo(false);
+  let file;
+  try{
+    file = await getVideo(id);
+  }catch(e){
+    if(request === videoOpenRequest) alert("Videoen kunne ikke indlæses.");
     return;
   }
-
-  const file = await getVideo(id);
-
+  if(request !== videoOpenRequest) return;
   if(!file){
     alert("Der er ikke valgt en video til " + person.name + ".");
     return;
   }
 
-  stopInlineVideo(true);
-
-  const mediaSlot = card.querySelector(".mediaSlot");
-  if(!mediaSlot) return;
-
-  const url = URL.createObjectURL(file);
-  const video = document.createElement("video");
-  video.className = "tileVideo";
-  video.controls = true;
-  video.playsInline = true;
-  video.src = url;
-
-  video.addEventListener("click", e => {
-    e.stopPropagation();
-  });
-
-  video.addEventListener("ended", () => {
-    stopInlineVideo(true);
-  });
-
-  mediaSlot.innerHTML = "";
-  mediaSlot.appendChild(video);
-
-  activeInlineVideo = video;
-  activeInlineVideoUrl = url;
-  activeInlineCard = card;
-  card.classList.add("playing");
-
+  currentPopupUrl = URL.createObjectURL(file);
+  personVideo.src = currentPopupUrl;
+  personVideo.currentTime = 0;
+  personVideo.playsInline = true;
+  videoFullscreen.classList.add("show");
   try{
-    video.currentTime = 0;
-    const playPromise = video.play();
-
-    if(playPromise && typeof playPromise.catch === "function"){
-      playPromise.catch(() => {});
-    }
-  }catch(e){}
+    await personVideo.play();
+  }catch(e){
+    // Brugeren kan starte manuelt via videoens afspilningsknap.
+  }
 }
 
-function closeVideo(){
-  stopInlineVideo(true);
-
+function closeVideo(invalidateRequest = true){
+  if(invalidateRequest) videoOpenRequest++;
   try{
     personVideo.pause();
-    personVideo.currentTime = 0;
-  }catch(e){}
-
-  if(personVideo.src){
-    URL.revokeObjectURL(personVideo.src);
     personVideo.removeAttribute("src");
     personVideo.load();
+  }catch(e){}
+  if(currentPopupUrl){
+    URL.revokeObjectURL(currentPopupUrl);
+    currentPopupUrl = null;
   }
-
   videoFullscreen.classList.remove("show");
 }
 
